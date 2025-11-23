@@ -1,7 +1,7 @@
 ![](https://img.shields.io/badge/Foundry-v13-informational)
 ![Latest Release Download Count](https://img.shields.io/github/downloads/rayssharma/pf2e-aon-import/latest/module.zip)
 
-# FoundryVTT PF2E-AoN-Import
+# PF2E-AoN-Import
 
 Take exported data tables from Archives of Nethys (AoN) and import them into FoundryVTT. Quickly setup well-populated shops!
 
