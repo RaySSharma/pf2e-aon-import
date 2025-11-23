@@ -2,7 +2,7 @@
   "id": "pf2e-aon-import",
   "title": "PF2e AoN Import",
   "description": "",
-  "version": "1.0.0",
+  "version": "#{VERSION}#",
   "compatibility": {
     "minimum": "13",
     "verified": "13"
@@ -39,6 +39,11 @@
       "path": "languages/en.json"
     }
   ],
+  "url": "#{URL}#",
+  "manifest": "#{MANIFEST}#",
+  "download": "#{DOWNLOAD}#",
+  "license": "LICENSE",
+  "readme": "README.md",
   "media": [
     {
       "type": "icon",
