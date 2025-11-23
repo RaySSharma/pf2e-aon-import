@@ -1,5 +1,3 @@
-// AoN Import library: parse AoN CSV / JSON exports and normalize records
-
 (function (global) {
   const AoNImport = {
     // Parse CSV text into array of objects using header row
