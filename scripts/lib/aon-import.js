@@ -1,3 +1,5 @@
+// AoN Import library: parse AoN CSV / JSON exports and normalize records
+
 (function (global) {
   const AoNImport = {
     // Parse CSV text into array of objects using header row
@@ -303,59 +305,37 @@
   }
 
   // Open the Foundry FilePicker to choose a file from server (if available), otherwise fall back to local file input
-  AoN.openImportDialog = async function ({
-    compile = false,
-    retrieveDocument = false,
-  } = {}) {
-    // If Foundry's FilePicker is available, use it to select server-side files
-    if (typeof foundry.applications.apps.FilePicker !== "undefined") {
-      return new Promise((resolve) => {
-        const fp = new foundry.applications.apps.FilePicker({
-          type: "file",
-          callback: async (paths) => {
-            try {
-              // FilePicker returns a string path for single selection
-              const path = Array.isArray(paths) ? paths[0] : paths;
-              const response = await fetch(path);
-              const text = await response.text();
-              const parsed = AoN.parse(text);
-              AoN.lastParsed = parsed;
-              if (compile)
-                await AoN.compileMatches(parsed, { retrieveDocument });
-              resolve({ path, parsed, matches: AoN.matches });
-            } catch (e) {
-              ui.notifications?.error?.("AoN Import: failed to load file");
-              resolve(null);
-            }
-          },
-        }).render(true);
-      });
-    }
+  AoN.openImportDialog = async function () {
+    let activeSource = "data";
+    let picker = foundry.applications.apps.FilePicker;
 
-    // Browser fallback: create a hidden file input
-    return new Promise((resolve) => {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = ".csv,application/json,text/csv,text/plain,.json";
-      input.style.display = "none";
-      input.onchange = async (ev) => {
-        const file = ev.target.files && ev.target.files[0];
-        if (!file) return resolve(null);
+    // Running on The Forge
+    if (typeof ForgeVTT != "undefined" && ForgeVTT.usingTheForge) {
+      activeSource = "forgevtt";
+      picker = ForgeVTT_FilePicker;
+    }
+    const filePicker = new picker({
+      type: "file",
+      source: activeSource,
+      callback: async (paths) => {
         try {
-          const text = await readFileAsText(file);
+          const path = Array.isArray(paths) ? paths[0] : paths;
+          const response = await fetch(path);
+          const text = await response.text();
           const parsed = AoN.parse(text);
           AoN.lastParsed = parsed;
-          if (compile) await AoN.compileMatches(parsed, { retrieveDocument });
-          resolve({ fileName: file.name, parsed, matches: AoN.matches });
+
+          await AoN.compileMatches(parsed, { retrieveDocument: false });
+          resolve({ path, parsed, matches: AoN.matches });
         } catch (e) {
-          console.error("AoNImport: file read error", e);
+          ui.notifications?.error?.("AoN Import: failed to load file");
           resolve(null);
-        } finally {
-          input.remove();
         }
-      };
-      document.body.appendChild(input);
-      input.click();
+      },
+    });
+    // FilePicker
+    return new Promise((resolve) => {
+      filePicker.render(true);
     });
   };
 
@@ -369,8 +349,9 @@
       return null;
     }
 
-    // Resolve records and matches from internal state if not provided
-    const matchList = Object.values(AoN.matches).flat();
+    // Resolve matches from internal state
+    const matchMap = matches || AoN.matches || {};
+    const matchList = Object.values(matchMap).flat();
 
     // Try to create an actor of type 'loot' (PF2e). Fallback to 'npc' if not available.
     let actorType = "loot";
@@ -387,10 +368,7 @@
       );
       actorType = "npc";
       try {
-        actor = await Actor.implementation.createDocuments([
-          { name: actorName, type: actorType },
-        ]);
-        actor = actor[0];
+        actor = await Actor.create({ name: actorName, type: actorType });
       } catch (err2) {
         console.error(
           "AoNImport: failed to create actor for merchant import",
