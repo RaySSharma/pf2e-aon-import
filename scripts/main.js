@@ -29,7 +29,7 @@ Hooks.once("init", async function () {
           });
           if (actor) {
             ui.notifications?.info(
-              `AoN Import: created Merchant actor "${actor.name}" with ${actor.itemTypes.inventory.length} items`
+              `AoN Import: created Merchant actor "${actor.name}" with ${Object.values(actor.itemTypes).flat().length} items`
             );
           }
         } catch (err) {

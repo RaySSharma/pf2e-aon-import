@@ -314,28 +314,27 @@
       activeSource = "forgevtt";
       picker = ForgeVTT_FilePicker;
     }
-    const filePicker = new picker({
-      type: "file",
-      source: activeSource,
-      callback: async (paths) => {
-        try {
-          const path = Array.isArray(paths) ? paths[0] : paths;
-          const response = await fetch(path);
-          const text = await response.text();
-          const parsed = AoN.parse(text);
-          AoN.lastParsed = parsed;
-
-          await AoN.compileMatches(parsed, { retrieveDocument: false });
-          resolve({ path, parsed, matches: AoN.matches });
-        } catch (e) {
-          ui.notifications?.error?.("AoN Import: failed to load file");
-          resolve(null);
-        }
-      },
-    });
     // FilePicker
     return new Promise((resolve) => {
-      filePicker.render(true);
+      const filePicker = new picker({
+        type: "file",
+        source: activeSource,
+        callback: async (paths) => {
+          try {
+            const path = Array.isArray(paths) ? paths[0] : paths;
+            const response = await fetch(path);
+            const text = await response.text();
+            const parsed = AoN.parse(text);
+            AoN.lastParsed = parsed;
+
+            await AoN.compileMatches(parsed, { retrieveDocument: false });
+            resolve({ path, parsed, matches: AoN.matches });
+          } catch (e) {
+            ui.notifications?.error?.("AoN Import: failed to load file");
+            resolve(null);
+          }
+        },
+      }).render(true);
     });
   };
 
@@ -350,8 +349,7 @@
     }
 
     // Resolve matches from internal state
-    const matchMap = matches || AoN.matches || {};
-    const matchList = Object.values(matchMap).flat();
+    const matchList = Object.values(AoN.matches).flat();
 
     // Try to create an actor of type 'loot' (PF2e). Fallback to 'npc' if not available.
     let actorType = "loot";
@@ -391,9 +389,6 @@
           for (const it of matchList) await actor.createOwnedItem(it);
         }
       }
-      ui.notifications?.info?.(
-        `AoN Import: created Merchant Actor "${actor.name}" with ${matchList.length} items`
-      );
     } catch (err) {
       console.error("AoNImport: failed to add items to Merchant Actor", err);
       ui.notifications?.error?.(
