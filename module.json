@@ -1,7 +1,7 @@
 {
   "id": "pf2e-aon-import",
   "title": "PF2e AoN Import",
-  "description": "",
+  "description": "Import Items from Archives of Nethys into FVTT PF2e.",
   "version": "#{VERSION}#",
   "compatibility": {
     "minimum": "13",
@@ -24,7 +24,7 @@
     ]
   },
   "esmodules": [
-    "scripts/module.js"
+    "scripts/main.js"
   ],
   "scripts": [
     "scripts/lib/aon-import.js"
